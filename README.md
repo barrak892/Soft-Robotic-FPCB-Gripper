@@ -22,13 +22,13 @@ Sensor count was also important.
 
 Adding another sensor meant:
 
-- another IC to purchase
-- more board area
-- more traces to route
-- more solder joints
-- more firmware
-- more calibration
-- another point to debug if something failed after encapsulation
+- Another IC to purchase
+- More board area
+- More traces to route
+- More solder joints
+- More firmware
+- More calibration
+- Another point to debug if something failed after encapsulation
 
 The design therefore focused on using a small number of sensors that could provide several useful measurements while keeping the board practical to route and fabricate.
 
@@ -72,15 +72,15 @@ The sensors investigated changed during the project:
 
 Sensor selection was based on more than performance alone. I also considered:
 
-- package size
-- number of useful measurements available from one IC
+- Package size
+- Number of useful measurements available from one IC
 - I2C compatibility
-- routing requirements
-- cost
-- part availability
-- firmware support
-- calibration requirements
-- ease of debugging
+- Routing requirements
+- Cost
+- Part availability
+- Firmware support
+- Calibration requirements
+- Ease of debugging
 
 For a single prototype, one extra sensor may not seem important. On a multi-finger gripper, the same choice gets repeated several times, so component count, cost, and wiring can increase quickly.
 
@@ -98,18 +98,18 @@ Using a shared communication bus reduced the number of signal traces running alo
 
 This helped with:
 
-- routing
-- board width
-- fabrication
-- copper density
-- debugging
-- scaling to multiple sensors
+- Routing
+- Board width
+- Fabrication
+- Copper density
+- Debugging
+- Scaling to multiple sensors
 
 The prototype also included:
 
 - **4.7 kΩ** I2C pull-up resistors
 - **0.1 µF** decoupling capacitors
-- shared **3.3 V** and ground rails
+- Shared **3.3 V** and ground rails
 
 The routing was intended to stay near the lower-strain region of the flex stack where possible, reducing the mechanical stress seen by the copper during bending.
 
@@ -157,7 +157,7 @@ The FPCB can bend, but the IC packages are still rigid. Poor component placement
 
 The embedded system would eventually need to be characterized as:
 
-external event → silicone deformation → embedded sensor response
+External event → Silicone deformation → Embedded sensor response
 
 rather than evaluating the sensors only on a bench.
 
@@ -209,13 +209,13 @@ The initial architecture mainly focused on one FPCB.
 
 A larger gripper with several instrumented fingers would introduce additional problems:
 
-- more devices sharing communication resources
-- higher polling requirements
-- longer communication paths
-- increased parasitic capacitance
-- more sensor data to process
-- more synchronization
-- harder debugging
+- More devices sharing communication resources
+- Higher polling requirements
+- Longer communication paths
+- Increased parasitic capacitance
+- More sensor data to process
+- More synchronization
+- Harder debugging
 
 The design documentation also considered how the sensor acquisition architecture might eventually need more parallel processing as the number of sensors increased.
 
@@ -225,19 +225,10 @@ That work remained conceptual, but it helped frame the FPCB as one part of a lar
 
 ## Documentation
 
-The repository contains the main documents produced during the project.
+The repository includes:
 
-### Research Paper
-
-Summary of the proposed FPCB architecture, sensing approach, mechanical integration, and validation plan.
-
-[View Research Paper](ELIXR_Report%20(6).pdf)
-
-### Design Documentation
-
-Detailed design notes covering the flex construction, sensor architecture, I2C interface, component choices, and possible long-term issues.
-
-[View Design Documentation](Design%20Documentation%20(1).pdf)
+- Research paper covering the proposed FPCB architecture, sensing approach, mechanical integration, and validation plan
+- Design documentation covering the flex construction, sensor architecture, I2C interface, component choices, and possible long-term issues
 
 ---
 
