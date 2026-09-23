@@ -1,281 +1,246 @@
-# Soft-Robotic-FPCB-Gripper
-Prototype flexible PCB sensing architecture for multi-modal feedback in soft robotic grippers.
+# Multi-Modal FPCB for Soft Robotic Grippers
 
+Prototype flexible-PCB sensing architecture developed during my undergraduate research work in soft robotics.
 
-The main question behind the project was:
+The project focused on integrating sensing into a soft robotic gripper without adding too much stiffness, wiring, or hardware complexity.
 
-**How do you add useful sensing to a soft robotic finger without making the finger rigid, difficult to wire, or hard to debug?**
+The proposed design used a thin polyimide FPCB with motion, pressure-proxy, and temperature sensing connected over a shared I2C bus.
 
-The design explored a thin polyimide FPCB that could follow the shape of a soft gripper while carrying multiple sensing modes over a shared I2C bus.
-
----
-
-## Project Snapshot
-
-| Item | Details |
-|---|---|
-| Area | Soft Robotics / Flexible Electronics |
-| Project Type | Undergraduate Research Prototype |
-| Duration | ~2 months |
-| Substrate | Polyimide FPCB |
-| Communication | I2C |
-| Sensing Modes | Motion, pressure-proxy, temperature |
-| Supply | 3.3 V |
-| Status | Design-stage prototype |
+Research area: Soft robotics, flexible electronics, embedded sensing  
+Duration: **~2 months**  
+Project stage: Research and prototype design
 
 ---
 
-## The Problem
+## Design Goal
 
-Soft robotic grippers work because they can bend and conform around objects.
+The main problem was fitting useful sensing into a soft gripper without making the finger harder to bend or unnecessarily complicated to build.
 
-That becomes harder once conventional electronics are embedded inside them.
+A standard rigid PCB would be easier to design electrically, but it would create a stiff section inside the silicone finger. The electronics needed to follow the motion of the gripper, so the design moved toward a thin flexible PCB instead.
 
-A rigid PCB can create a stiff section inside the finger. Extra wiring can resist bending and introduce more failure points. External cameras can also lose visibility once the gripper closes around the object.
+Sensor count was also important.
 
-The goal was therefore not just to place sensors on a board, but to design the electronics around the mechanical behaviour of the gripper itself.
+Adding another sensor meant:
 
-The proposed solution was a narrow **flexible sensing spine** that follows the shape of the finger instead of forcing a rectangular rigid PCB into it.
+- another IC to purchase
+- more board area
+- more traces to route
+- more solder joints
+- more firmware
+- more calibration
+- another point to debug if something failed after encapsulation
+
+The design therefore focused on using a small number of sensors that could provide several useful measurements while keeping the board practical to route and fabricate.
 
 ---
 
 ## Proposed FPCB Architecture
 
-The prototype uses a thin polyimide flexible PCB with sensors distributed along the finger based on what each location is best suited to measure.
+The later prototype used three sensing nodes:
 
-### Prototype sensing layout
-
-| Sensor | Purpose |
+| Sensor | Function |
 |---|---|
-| **MPU-6050** | Motion, orientation, bending behaviour |
+| **MPU-6050** | Motion, orientation, and bending information |
 | **BMP280** | Pressure-proxy / deformation feedback |
 | **LM75** | Local temperature monitoring |
 
-The three sensing nodes share the same communication and power backbone:
+The sensors shared the same basic interface:
 
-**SDA + SCL + 3.3 V + GND**
+SDA · SCL · **3.3 V** · GND
 
-This lets several sensors communicate without needing separate wiring for every device.
+The board was intended to run along the inside of the gripper rather than placing a rectangular PCB in one location.
 
-The idea was to make the PCB act more like a **distributed sensing spine** than a normal sensor board.
+Sensor placement was also considered as part of the design. The motion sensor could be placed farther along the finger where movement is more pronounced, while the pressure-proxy and thermal sensors could be positioned where their measurements would be more useful.
 
 ---
 
-## Sensor Selection & Consolidation
+## Sensor Research and Selection
 
-A large part of the research work involved reading existing soft-robotics and flexible-electronics literature to understand what sensors other groups were using and why.
+A large part of the project involved reading papers and comparing sensors used in soft robotics, tactile sensing, and flexible electronics.
 
-One of the main design goals was to avoid adding a separate sensor for every possible measurement.
+The goal was not just to find one sensor for each measurement. I was also looking for devices that could provide several useful measurements from one IC so the total number of components could be reduced.
 
-Every extra sensor adds:
+For example, a **6-axis** IMU provides both acceleration and angular-rate data. One package can therefore contribute to several motion-related measurements instead of using separate devices for each one.
 
-- PCB area
-- Cost
-- Copper routing
-- Solder joints
-- Firmware
-- Calibration work
-- Debugging time
-- Another possible failure point
+The sensors investigated changed during the project:
 
-That made **multi-function sensing** especially interesting.
+| Sensing Need | Sensors Considered |
+|---|---|
+| Motion / vibration | **LSM6DSOX**, **MPU-6050** |
+| Pressure / deformation | **MS5837**, **BMP280** |
+| Temperature | **MAX31875**, **LM75** |
 
-For example, an IMU does not provide only one useful measurement. The same device can provide acceleration and angular-rate data that may help describe orientation, motion, bending, and potentially vibration associated with grasp instability.
+Sensor selection was based on more than performance alone. I also considered:
 
-### Devices investigated during the research
+- package size
+- number of useful measurements available from one IC
+- I2C compatibility
+- routing requirements
+- cost
+- part availability
+- firmware support
+- calibration requirements
+- ease of debugging
 
-| Sensing Need | Devices Investigated | Design Goal |
+For a single prototype, one extra sensor may not seem important. On a multi-finger gripper, the same choice gets repeated several times, so component count, cost, and wiring can increase quickly.
+
+---
+
+## Why I2C
+
+I2C allowed multiple sensors to share the same SDA and SCL lines.
+
+That was useful on a flex PCB because every additional electrical connection eventually becomes another copper trace that has to be routed through a long, narrow board.
+
+The FPCB also has mechanical constraints that a normal rectangular PCB does not. The traces need to follow the shape of the gripper and pass through areas that repeatedly bend.
+
+Using a shared communication bus reduced the number of signal traces running along the finger.
+
+This helped with:
+
+- routing
+- board width
+- fabrication
+- copper density
+- debugging
+- scaling to multiple sensors
+
+The prototype also included:
+
+- **4.7 kΩ** I2C pull-up resistors
+- **0.1 µF** decoupling capacitors
+- shared **3.3 V** and ground rails
+
+The routing was intended to stay near the lower-strain region of the flex stack where possible, reducing the mechanical stress seen by the copper during bending.
+
+Fewer communication traces also meant fewer paths to inspect if a sensor stopped responding.
+
+---
+
+## Flexible PCB Construction
+
+The proposed board used a thin polyimide construction.
+
+| Parameter | Proposed Value |
+|---|---|
+| Substrate | Polyimide |
+| Thickness | **0.1 mm** |
+| Layers | **2** |
+| Copper | **1 oz**, with **0.5 oz** considered for greater flexibility |
+| Stiffeners | Localized underneath sensor ICs |
+
+Polyimide was selected because it could bend with the gripper more easily than a rigid FR4 board.
+
+The board still could not be treated as completely flexible.
+
+Copper traces, sensor packages, solder joints, connectors, and stiffeners all add local stiffness. Component placement therefore had to consider both the electrical layout and how the board would bend once it was inside the actuator.
+
+---
+
+## Effect of Silicone Encapsulation
+
+One of the main open questions was how the sensor data would change once the FPCB was embedded inside silicone.
+
+The surrounding material becomes part of the sensing system.
+
+For pressure sensing, the force applied to the outside of the gripper has to pass through the silicone before reaching the embedded sensor.
+
+The silicone can spread or absorb some of that force, meaning the sensor output would need to be calibrated after embedding rather than treated as a direct measurement of external contact force.
+
+A similar problem exists for vibration.
+
+If the IMU were used to detect small vibrations associated with slip, the soft material surrounding it could damp some of those vibrations before they reached the sensor.
+
+The electronics could also affect the gripper itself.
+
+The FPCB can bend, but the IC packages are still rigid. Poor component placement could create stiff regions or concentrate stress around pads and solder joints.
+
+The embedded system would eventually need to be characterized as:
+
+external event → silicone deformation → embedded sensor response
+
+rather than evaluating the sensors only on a bench.
+
+---
+
+## Reliability and Failure Concerns
+
+Several possible problems were considered before fabrication.
+
+| Concern | Possible Effect | Planned Approach |
 |---|---|---|
-| Motion / orientation / vibration | LSM6DSOX, MPU-6050 | Use one inertial device for several motion-related measurements |
-| Pressure / deformation | MS5837, BMP280 | Obtain pressure-related information with minimal mechanical complexity |
-| Temperature | MAX31875, LM75 | Add thermal feedback without significantly increasing wiring or board area |
-
-The sensor list changed as the project developed. The goal was not to lock onto the first device found, but to compare options based on size, sensing capability, bus compatibility, integration difficulty, and usefulness inside a soft structure.
-
----
-
-## Why I2C?
-
-One of the main logistical problems in an embedded soft-robotic system is wiring.
-
-Every extra conductor running through a flexible finger adds stiffness and gives another place for the system to fail.
-
-Using I2C allows several sensors to share the same two communication lines:
-
-- **SDA** — data
-- **SCL** — clock
-
-along with the common power and ground rails.
-
-The prototype architecture also used:
-
-- **4.7 kΩ pull-up resistors** on the I2C bus
-- **0.1 µF decoupling capacitors** near the sensor electronics
-
-The shared bus helped reduce the number of traces that had to run through the flexible structure.
-
----
-
-## Flexible PCB & Mechanical Design
-
-The board itself had to be treated as part of the mechanical system.
-
-A standard FR4 PCB would be much stiffer than the surrounding soft material, so the prototype instead used a thin polyimide flex construction.
-
-| Design Parameter | Proposed Value |
-|---|---:|
-| Base Material | Polyimide |
-| Substrate Thickness | **0.1 mm** |
-| Layer Count | **2 layers** |
-| Copper Weight | **1 oz / 0.5 oz for increased flexibility** |
-| Stiffeners | Localized under sensor ICs only |
-
-The copper traces also matter mechanically.
-
-Even though the substrate is flexible, copper still adds stiffness and experiences strain while the finger bends. The design therefore considered routing the traces near the neutral bending region of the flex stack to reduce mechanical stress.
-
-The goal was to keep rigid material only where it was actually needed.
-
----
-
-## Encapsulation & Mechanical Signal Integrity
-
-One of the biggest unknowns was what would happen **after the FPCB was embedded inside the silicone gripper**.
-
-The electronics may work correctly on their own, but once they are encapsulated, the silicone becomes part of the sensing system.
-
-Several failure mechanisms were considered.
-
-### Pressure redistribution
-
-A force applied to the outside of the finger may not reach the embedded pressure sensor in the same form.
-
-The silicone can spread or absorb part of the load before it reaches the sensing element.
-
-That means a pressure reading cannot automatically be treated as the true external contact force.
-
-The pressure sensor would need to be calibrated after embedding.
-
-### Vibration damping
-
-Soft silicone can absorb high-frequency mechanical vibration.
-
-This is important if inertial sensing is being used to detect events such as object slip or small contact vibrations.
-
-The vibration measured by the IMU may therefore be weaker than the vibration that actually occurred at the gripper surface.
-
-### Calibration shift
-
-A sensor calibrated before encapsulation may behave differently after it is surrounded by silicone, mechanically compressed, or bent with the finger.
-
-The embedded environment has to be treated as part of the calibration process.
-
-### Added stiffness
-
-The flexible substrate can bend, but the sensor packages themselves are still rigid.
-
-Poor component placement could create local stiff spots or change how the finger deforms.
-
-### Repeated bending
-
-Repeated actuation can place stress on:
-
-- Copper traces
-- Solder joints
-- Component pads
-- Connectors
-- Rigid sensor packages
-
-These would need to be tested over many bending cycles before the design could be considered reliable.
-
----
-
-## Foreshadowed Failure Modes
-
-| Risk | Possible Effect | Planned Response |
-|---|---|---|
-| Silicone pressure damping | Sensor reading does not directly match external force | Calibrate after embedding |
-| Vibration absorption | Slip-related vibration becomes weaker | Improve sensor placement / mechanical coupling |
+| Pressure damping through silicone | Sensor output does not directly match external force | Calibrate after embedding |
+| Vibration damping | Small slip-related vibrations may be weakened | Evaluate sensor placement and mechanical coupling |
 | Repeated bending | Trace or solder-joint fatigue | Bend-cycle testing |
-| Added electronics stiffness | Gripper becomes less compliant | Compare gripper motion with and without FPCB |
-| Moisture / environmental exposure | Electrical failure or corrosion | Protective coating / encapsulation strategy |
-| Increasing sensor count | More wiring and debugging complexity | Shared bus and sensor consolidation |
+| Rigid sensor packages | Local stiffness inside the finger | Use local stiffeners only where required |
+| Moisture exposure | Electrical degradation | Protective coating / encapsulation |
+| Too many sensors | More routing, cost, and debugging | Shared bus and sensor consolidation |
+
+Electrical functionality alone would not be enough. The sensing system also had to survive repeated motion without significantly changing the mechanical behaviour of the gripper.
 
 ---
 
-## System-Level Scaling
+## Cost and Integration Considerations
 
-Another question was what happens if the same sensing system is eventually placed across multiple gripper fingers.
+Sensor performance was only one part of the component-selection process.
 
-A single microcontroller may be sufficient for a small number of sensors, but larger systems introduce new problems:
+There were also practical questions around fabrication and scaling:
 
-- More devices sharing the communication bus
-- Higher polling requirements
-- More data to process
-- Longer wiring paths
-- Increased parasitic capacitance
-- More complicated debugging
+- Is the package small enough for the FPCB?
+- Can one device replace several separate sensing elements?
+- Does it use the same communication bus as the other sensors?
+- Is the part reasonably priced?
+- Is it easy to source?
+- Does it require extra supporting circuitry?
+- How difficult will it be to route?
+- How difficult will it be to debug after encapsulation?
 
-The early design work considered keeping the sensors on a shared bus and eventually using more parallel processing if the system scaled to many fingers.
+This was one reason multi-function sensors were attractive.
 
-The larger lesson was that the electronics could not be designed separately from the communication and data-processing architecture.
+A device that costs slightly more on its own may still reduce the overall system cost if it removes another IC, extra traces, assembly work, or debugging effort.
 
----
-
-## Prototype Status
-
-This project remained at the **design and research stage** during my time in the lab.
-
-The sensing architecture, sensor trade study, flexible stack-up, communication strategy, failure analysis, and validation plan were developed, but the final FPCB was not fabricated or experimentally validated.
-
-The intended next steps were:
-
-1. Fabricate the FPCB
-2. Verify electrical operation outside the gripper
-3. Perform repeated bend-cycle testing
-4. Embed the board inside the silicone finger
-5. Calibrate the sensors after encapsulation
-6. Measure how much the FPCB changes gripper compliance
-7. Run grasp tests using the combined sensor feedback
+These tradeoffs become more important when the same FPCB is repeated across several fingers.
 
 ---
 
-## Research Deliverables
+## Scaling Beyond One Finger
 
-This repository includes the main technical documentation produced during the project.
+The initial architecture mainly focused on one FPCB.
 
-### Technical Paper
+A larger gripper with several instrumented fingers would introduce additional problems:
 
-A concise research-style overview of the proposed FPCB architecture, sensing strategy, mechanical integration, limitations, and validation roadmap.
+- more devices sharing communication resources
+- higher polling requirements
+- longer communication paths
+- increased parasitic capacitance
+- more sensor data to process
+- more synchronization
+- harder debugging
 
-[View Technical Paper](ELIXR_Report%20(6).pdf)
+The design documentation also considered how the sensor acquisition architecture might eventually need more parallel processing as the number of sensors increased.
+
+That work remained conceptual, but it helped frame the FPCB as one part of a larger sensing system rather than an isolated board.
+
+---
+
+## Documentation
+
+The repository contains the main documents produced during the project.
+
+### Research Paper
+
+Summary of the proposed FPCB architecture, sensing approach, mechanical integration, and validation plan.
+
+[View Research Paper](ELIXR_Report%20(6).pdf)
 
 ### Design Documentation
 
-More detailed notes covering the proposed flex stack, sensor architecture, I2C design, component choices, mechanical considerations, and future scaling concerns.
+Detailed design notes covering the flex construction, sensor architecture, I2C interface, component choices, and possible long-term issues.
 
 [View Design Documentation](Design%20Documentation%20(1).pdf)
 
 ---
 
-## Skills / Topics
-
-- Flexible PCB architecture
-- Soft robotics
-- Sensor selection and trade studies
-- Multi-modal sensing
-- I2C communication
-- Flexible-electronics research
-- Mechanical / electrical co-design
-- Embedded sensor integration
-- Failure-mode analysis
-- Technical literature review
-- Research documentation
-
----
-
 ## Research Context
 
-Undergraduate research work completed in the **ELIXR Lab at Toronto Metropolitan University**.
-
-The project focused on exploring how flexible electronics and embedded sensing could be integrated into soft robotic grippers without introducing the stiffness, wiring complexity, and sensing limitations of more conventional approaches.
+Undergraduate research work completed in the ELIXR Lab at Toronto Metropolitan University.
